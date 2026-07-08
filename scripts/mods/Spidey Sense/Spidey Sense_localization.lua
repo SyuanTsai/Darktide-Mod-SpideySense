@@ -16,18 +16,23 @@ local localizations = {
     },
     arc_side = {
         en = "Show Arcs On Side",
+        ["zh-tw"] = "在側面顯示弧形",
     },
     arc_side_tooltip = {
         en = "Limit directional arcs to threats on one side of you. Both shows every arc (default); Left shows only arcs for threats to your left; Right shows only arcs for threats to your right. Threats directly ahead or behind still show on either side.",
+        ["zh-tw"] = "將方向弧形限制為你一側的威脅。兩側顯示所有弧形（預設）；左側僅顯示你左側威脅的弧形；右側僅顯示你右側威脅的弧形。直接在前方或後方的威脅仍然會在任一側顯示。",
     },
     arc_side_both = {
         en = "Both",
+        ["zh-tw"] = "兩側",
     },
     arc_side_left = {
         en = "Left",
+        ["zh-tw"] = "左側",
     },
     arc_side_right = {
         en = "Right",
+        ["zh-tw"] = "右側",
     },
     invalid_colour_setting = {
         en = " has an invalid color. Please update the arc or text settings",
@@ -176,10 +181,12 @@ local localizations = {
     melee_backstab_name = {
         en = "Melee Backstab",
         ["zh-cn"] = "近战背刺",
+        ["zh-tw"] = "近戰背刺",
     },
     ranged_backstab_name = {
       en = "Ranged Backstab",
       ["zh-cn"] = "远程背刺",
+      ["zh-tw"] = "遠程背刺",
     },
     melee_backstab_colour = {
         en = "Colour for Melee Backstab warnings",
