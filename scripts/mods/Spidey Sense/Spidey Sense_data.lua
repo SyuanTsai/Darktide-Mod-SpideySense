@@ -7,7 +7,7 @@ local getFonts = function()
         table.insert(options, {text = i, value = i})
     end
     local current_locale = Managers.localization and Managers.localization:language()
-    if locale == "zh-cn" then
+    if current_locale == "zh-cn" then
         table.insert(options, {text = "noto_sans_sc_black", value = "noto_sans_sc_black"})
         table.insert(options, {text = "noto_sans_sc_bold", value = "noto_sans_sc_bold"})
     end
@@ -119,6 +119,12 @@ local function create_option_set(typeName, defaultColour1, defaultColour2)
                 options = get_color_options()
             },
             {
+                setting_id = typeName .. "_multi_enemy_show_numbers",
+                type = "checkbox",
+                tooltip = "multi_enemy_show_numbers_tooltip",
+                default_value = false
+            },
+            {
                 setting_id = typeName .. "_copy_from",
                 title = "copy_from",
                 type = "dropdown",
@@ -129,26 +135,17 @@ local function create_option_set(typeName, defaultColour1, defaultColour2)
     }
 end
 
-mod.on_setting_changed = function(setting_id)
-    if not setting_id:match("_copy_from") then
-        return
-    end    
-    local typeName = string.sub(setting_id, 1, string.find(setting_id, "_copy_from") - 1)    
-    local new_value = mod:get(setting_id)
-    mod:set(typeName .. "_active", mod:get(new_value .. "_active"), false)
-    mod:set(typeName .. "_radius", mod:get(new_value .. "_radius"), false)
-    mod:set(typeName .. "_active_range", mod:get(new_value .. "_active_range"), false)
-    mod:set(typeName .. "_nurgle_blessed", mod:get(new_value .. "_nurgle_blessed"), false)
-    mod:set(typeName .. "_distance", mod:get(new_value .. "_distance"), false)
-    mod:set(typeName .. "_arrow_distance", mod:get(new_value .. "_arrow_distance"), false)
-    mod:set(typeName .. "_arrow_colour", mod:get(new_value .. "_arrow_colour"), false)
-    mod:set(typeName .. "_only_behind", mod:get(new_value .. "_only_behind"), false)
-    mod:set(typeName .. "_front_opacity", mod:get(new_value .. "_front_opacity"), false)
-    mod:set(typeName .. "_front_colour", mod:get(new_value .. "_front_colour"), false)
-    mod:set(typeName .. "_back_opacity", mod:get(new_value .. "_back_opacity"), false)
-    mod:set(typeName .. "_back_colour", mod:get(new_value .. "_back_colour"), false)
-    mod:set(setting_id, "none", false)
-end
+table.insert(options.options.widgets, {
+    setting_id = "arc_side",
+    type = "dropdown",
+    tooltip = "arc_side_tooltip",
+    default_value = "both",
+    options = {
+        {text = "arc_side_both",  value = "both"},
+        {text = "arc_side_left",  value = "left"},
+        {text = "arc_side_right", value = "right"},
+    }
+})
 
 table.insert(options.options.widgets, create_option_set("burster", "burly_wood", "citadel_averland_sunset"))
 table.insert(options.options.widgets, create_option_set("barrel", "cheeseburger", "citadel_balthasar_gold"))
@@ -162,6 +159,7 @@ table.insert(options.options.widgets, create_option_set("hound", "chart_reuse", 
 table.insert(options.options.widgets, create_option_set("mauler", "turquoise", "ui_blue_light"))
 table.insert(options.options.widgets, create_option_set("mutant", "ui_green_light", "spring_green"))
 table.insert(options.options.widgets, create_option_set("plague_ogryn", "powder_blue", "citadel_bieltan_green"))
+table.insert(options.options.widgets, create_option_set("plasma_gunner", "royal_blue", "tomato"))
 table.insert(options.options.widgets, create_option_set("rager", "medium_spring_green", "midnight_blue"))
 table.insert(options.options.widgets, create_option_set("sniper", "powder_blue", "ui_ability_purple"))
 table.insert(options.options.widgets, create_option_set("trapper", "ui_hud_warp_charge_medium", "ui_hud_warp_charge_low"))
@@ -291,7 +289,6 @@ local add_warning = function(typeName, attackName)
             {
                 setting_id = typeName .."_range_max",
                 type = "numeric",                
-                --tooltip = "render_".. typeName .."_warning_description",
                 default_value = 10,
                 range = {5, 20}
             },
@@ -344,5 +341,47 @@ houndsubwidget.default_value = 20
 local _, sniper = table.find_by_key(options.options.widgets, "setting_id", "sniper_text_warnings")
 local sniperkey, snipersubwidget = table.find_by_key(sniper.sub_widgets, "setting_id", "sniper_range_max")
 table.remove(sniper.sub_widgets, sniperkey)
+
+local colour_setting_defaults = {}
+
+local enemy_colour_defaults = {
+    burster       = { front = "burly_wood",               back = "citadel_averland_sunset", arrow = "burly_wood"               },
+    barrel        = { front = "cheeseburger",              back = "citadel_balthasar_gold",  arrow = "cheeseburger"              },
+    beast_of_nurgle = { front = "citadel_dorn_yellow",    back = "citadel_balthasar_gold",  arrow = "citadel_dorn_yellow"       },
+    crusher       = { front = "sienna",                    back = "ui_red_medium",            arrow = "sienna"                   },
+    chaos_spawn   = { front = "cheeseburger",              back = "ui_red_medium",            arrow = "cheeseburger"             },
+    daemonhost    = { front = "teal",                      back = "blue_violet",              arrow = "teal"                     },
+    flamer        = { front = "online_green",              back = "medium_violet_red",        arrow = "online_green"             },
+    grenadier     = { front = "sandy_brown",               back = "ui_interaction_pickup",    arrow = "sandy_brown"              },
+    hound         = { front = "chart_reuse",               back = "cadet_blue",               arrow = "chart_reuse"              },
+    mauler        = { front = "turquoise",                 back = "ui_blue_light",            arrow = "turquoise"                },
+    mutant        = { front = "ui_green_light",            back = "spring_green",             arrow = "ui_green_light"           },
+    plague_ogryn  = { front = "powder_blue",               back = "citadel_bieltan_green",    arrow = "powder_blue"              },
+    plasma_gunner = { front = "royal_blue",                back = "tomato",                   arrow = "royal_blue"               },
+    rager         = { front = "medium_spring_green",       back = "midnight_blue",            arrow = "medium_spring_green"      },
+    sniper        = { front = "powder_blue",               back = "ui_ability_purple",        arrow = "powder_blue"              },
+    trapper       = { front = "ui_hud_warp_charge_medium", back = "ui_hud_warp_charge_low",   arrow = "ui_hud_warp_charge_medium"},
+    toxbomber     = { front = "chart_reuse",               back = "citadel_bieltan_green",    arrow = "chart_reuse"              },
+    melee_backstab  = { front = "ui_terminal", back = "ui_terminal" },
+    ranged_backstab = { front = "ui_terminal", back = "ui_terminal" },
+}
+
+for type_name, slots in pairs(enemy_colour_defaults) do
+    for slot, default_colour in pairs(slots) do
+        colour_setting_defaults[type_name .. "_" .. slot .. "_colour"] = default_colour
+    end
+end
+
+local warning_attacks = { "cleave", "net", "charge", "shot", "pounce", "sniper" }
+for _, attack in ipairs(warning_attacks) do
+    colour_setting_defaults["font_colour_" .. attack] = "ui_terminal"
+end
+
+for setting_id, default_colour in pairs(colour_setting_defaults) do
+    local value = mod:get(setting_id)
+    if type(value) == "table" then
+        mod:set(setting_id, default_colour, false)
+    end
+end
 
 return options
